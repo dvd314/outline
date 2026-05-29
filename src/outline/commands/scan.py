@@ -1,38 +1,34 @@
 from pathlib import Path
 
-from outline.scanner.python_scanner import (
-    scan_project,
-)
-from outline.storage.graph_storage import (
-    save_graph,
+from outline.core.scanner import (
+    ProjectScanner,
 )
 
+from outline.scanners import (
+    SCANNERS,
+)
+
+from outline.storage.graph_storage import save_graph
 
 def command_scan() -> None:
 
     project_root = Path.cwd()
 
-    outline_dir = (
-        project_root / ".outline"
+    scanner = ProjectScanner(
+        scanners=SCANNERS,
     )
 
-    if not outline_dir.exists():
-
-        print(
-            "outline: project not initialized"
-        )
-
-        return
-
-    graph = scan_project(
-        project_root
+    graph = scanner.scan(
+        project_root,
     )
 
     save_graph(
         graph,
-        outline_dir / "graph.json",
+        project_root
+        / ".outline"
+        / "graph.json",
     )
 
     print(
-        "semantic graph updated"
+        "semantic graph updated",
     )
