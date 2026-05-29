@@ -1,4 +1,4 @@
-from core.semantic_object import SemanticObject
+from outline.core.semantic_object import SemanticObject
 
 
 class SemanticGraph:
