@@ -1,0 +1,14 @@
+[project]
+name = "outline"
+version = "0.1.0"
+description = "Semancit graph builder"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[project.scripts]
+outline = "outline.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
