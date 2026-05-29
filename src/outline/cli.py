@@ -2,7 +2,7 @@ import argparse
 
 from outline.commands.init import command_init
 from outline.commands.scan import command_scan
-from outline.commands.tree import command_tree
+from outline.commands.render import command_render
 
 
 def main() -> None:
@@ -26,9 +26,16 @@ def main() -> None:
         help="Build semantic graph",
     )
 
-    subparsers.add_parser(
-        "tree",
-        help="Show semantic tree",
+    render_parser = subparsers.add_parser(
+        "render",
+        help="Render semantic graph",
+    )
+
+    render_parser.add_argument(
+        "renderer",
+        nargs="?",
+        default="tree",
+        help="Renderer name",
     )
 
     args = parser.parse_args()
@@ -40,8 +47,8 @@ def main() -> None:
         case "scan":
             command_scan()
 
-        case "tree":
-            command_tree()
+        case "render":
+            command_render(args)
 
 
 if __name__ == "__main__":

@@ -47,3 +47,23 @@ class SemanticGraph:
             current = found
 
         return current
+
+    def to_dict(
+        self,
+    ) -> dict:
+
+        return {
+            "root": self.root.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: dict,
+    ):
+
+        return cls(
+            SemanticObject.from_dict(
+                data["root"],
+            )
+        )

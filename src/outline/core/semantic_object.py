@@ -34,3 +34,49 @@ class SemanticObject:
             current = current.parent
 
         return "/".join(reversed(parts))
+
+    def to_dict(
+        self,
+    ) -> dict:
+
+        return {
+            "name": self.name,
+            "note": self.note,
+            "metadata": self.metadata,
+            "children": [
+                child.to_dict()
+                for child
+                in self.children
+            ],
+        }
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: dict,
+    ):
+
+        obj = cls(
+            name=data["name"],
+            note=data.get(
+                "note",
+                "",
+            ),
+            metadata=data.get(
+                "metadata",
+                {},
+            ),
+        )
+
+        obj.children = [
+            cls.from_dict(
+                child,
+            )
+            for child
+            in data.get(
+                "children",
+                [],
+            )
+        ]
+
+        return obj
