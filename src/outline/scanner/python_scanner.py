@@ -1,44 +1,112 @@
 from pathlib import Path
 import ast
 
-from outline.core.semantic_object import SemanticObject
 from outline.core.graph import SemanticGraph
+from outline.core.semantic_object import SemanticObject
 
 
-def scan_project(project_root: Path) -> SemanticGraph:
+IGNORED_DIRS = {
+    ".git",
+    ".outline",
+    ".venv",
+    "__pycache__",
+}
+
+
+def create_object(
+    name: str,
+    kind: str,
+    source: str,
+) -> SemanticObject:
+
+    return SemanticObject(
+        name=name,
+        metadata={
+            "kind": kind,
+            "source": source,
+        },
+    )
+
+
+def scan_project(
+    project_root: Path,
+) -> SemanticGraph:
+
     project = SemanticObject(
         name=project_root.name,
+        metadata={
+            "kind": "project",
+        },
     )
+
+    directories: dict[str, SemanticObject] = {
+        "": project,
+    }
 
     for file in project_root.rglob("*.py"):
 
-        if ".venv" in file.parts:
+        if any(
+            part in IGNORED_DIRS
+            for part in file.parts
+        ):
             continue
 
-        if ".outline" in file.parts:
+        if file.name == "__init__.py":
             continue
 
-        module = scan_file(file, project_root)
+        relative_path = file.relative_to(
+            project_root
+        )
 
-        project.add_child(module)
+        parent = project
 
-    return SemanticGraph(project)
+        current_path = ""
+
+        for part in relative_path.parts[:-1]:
+
+            current_path = (
+                f"{current_path}/{part}"
+                if current_path
+                else part
+            )
+
+            if current_path not in directories:
+
+                directory = SemanticObject(
+                    name=part,
+                    metadata={
+                        "kind": "directory",
+                    },
+                )
+
+                parent.add_child(
+                    directory
+                )
+
+                directories[
+                    current_path
+                ] = directory
+
+            parent = directories[
+                current_path
+            ]
+
+        scan_file(
+            file,
+            project_root,
+            parent,
+        )
+
+    return SemanticGraph(
+        project
+    )
 
 
 def scan_file(
     file_path: Path,
     project_root: Path,
-) -> SemanticObject:
-
-    relative_path = file_path.relative_to(project_root)
-
-    module = SemanticObject(
-        name=str(relative_path),
-        metadata={
-            "kind": "module",
-            "source": str(relative_path),
-        },
-    )
+    parent: SemanticObject,
+) -> None:
 
     tree = ast.parse(
         file_path.read_text(
@@ -46,63 +114,123 @@ def scan_file(
         )
     )
 
+    source = str(
+        file_path.relative_to(
+            project_root
+        )
+    )
+
     for node in tree.body:
 
-        if isinstance(node, ast.ClassDef):
+        semantic_object = scan_node(
+            node,
+            source,
+        )
 
-            module.add_child(
-                SemanticObject(
-                    name=node.name,
-                    metadata={
-                        "kind": "class",
-                    },
-                )
+        if semantic_object:
+
+            parent.add_child(
+                semantic_object
             )
 
-        elif isinstance(
-            node,
-            ast.FunctionDef | ast.AsyncFunctionDef,
-        ):
 
-            module.add_child(
-                SemanticObject(
-                    name=node.name,
-                    metadata={
-                        "kind": "function",
-                    },
-                )
+def scan_node(
+    node: ast.AST,
+    source: str,
+) -> SemanticObject | None:
+
+    if isinstance(
+        node,
+        ast.ClassDef,
+    ):
+
+        semantic_object = create_object(
+            node.name,
+            "class",
+            source,
+        )
+
+        for child in node.body:
+
+            child_object = scan_node(
+                child,
+                source,
             )
 
-        elif isinstance(
-            node,
-            ast.AnnAssign,
-        ):
-            if isinstance(
-                node.target,
-                ast.Name,
-            ):
-                module.add_child(
-                    SemanticObject(
-                        name=node.target.id,
-                        metadata={
-                            "kind": "global",
-                        },
-                    )
+            if child_object:
+
+                semantic_object.add_child(
+                    child_object
                 )
 
-        elif isinstance(node, ast.Assign):
+        return semantic_object
 
-            for target in node.targets:
+    if isinstance(
+        node,
+        (
+            ast.FunctionDef,
+            ast.AsyncFunctionDef,
+        ),
+    ):
 
-                if isinstance(target, ast.Name):
+        semantic_object = create_object(
+            node.name,
+            "function",
+            source,
+        )
 
-                    module.add_child(
-                        SemanticObject(
-                            name=target.id,
-                            metadata={
-                                "kind": "global",
-                            },
-                        )
-                    )
+        for child in node.body:
 
-    return module
+            child_object = scan_node(
+                child,
+                source,
+            )
+
+            if child_object:
+
+                semantic_object.add_child(
+                    child_object
+                )
+
+        return semantic_object
+
+    if isinstance(
+        node,
+        ast.Assign,
+    ):
+
+        if len(node.targets) != 1:
+            return None
+
+        target = node.targets[0]
+
+        if not isinstance(
+            target,
+            ast.Name,
+        ):
+            return None
+
+        return create_object(
+            target.id,
+            "global",
+            source,
+        )
+
+    if isinstance(
+        node,
+        ast.AnnAssign,
+    ):
+
+        if not isinstance(
+            node.target,
+            ast.Name,
+        ):
+            return None
+
+        return create_object(
+            node.target.id,
+            "global",
+            source,
+        )
+
+    return None
