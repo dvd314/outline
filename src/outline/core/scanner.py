@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from fnmatch import fnmatch
 from pathlib import Path
+from dataclasses import asdict
 
 from outline.core.graph import SemanticGraph
 from outline.core.ignore import IgnoreMatcher
 from outline.core.semantic_object import SemanticObject
+from outline.core.dataclasses import SourceLocation
 
 
 class Scanner(ABC):
@@ -24,7 +26,7 @@ class Scanner(ABC):
         self,
         name: str,
         kind: str,
-        source: str,
+        source_location: SourceLocation,
         private: bool,
     ) -> SemanticObject:
 
@@ -32,7 +34,7 @@ class Scanner(ABC):
             name=name,
             metadata={
                 "kind": kind,
-                "source": source,
+                "source_location": asdict(source_location),
                 "private": private,
             },
         )

@@ -3,6 +3,7 @@ import ast
 
 from outline.core.scanner import Scanner
 from outline.core.semantic_object import SemanticObject
+from outline.core.dataclasses import SourceLocation
 
 
 class PythonScanner(Scanner):
@@ -48,6 +49,12 @@ class PythonScanner(Scanner):
         node: ast.AST,
         source: str,
     ) -> SemanticObject | None:
+        
+        location = SourceLocation(
+            path=source,
+            start_line=node.lineno,
+            end_line=node.end_lineno,
+        )
 
         if isinstance(
             node,
@@ -57,7 +64,7 @@ class PythonScanner(Scanner):
             semantic_object = self.create_object(
                 node.name,
                 "class",
-                source,
+                location,
                 private=self._is_private(
                     node.name,
                 ),
@@ -89,7 +96,7 @@ class PythonScanner(Scanner):
             semantic_object = self.create_object(
                 node.name,
                 "function",
-                source,
+                location,
                 private=self._is_private(
                     node.name,
                 ),
@@ -133,7 +140,7 @@ class PythonScanner(Scanner):
             return self.create_object(
                 target.id,
                 "global",
-                source,
+                location,
                 private=self._is_private(
                     target.id,
                 ),
@@ -154,7 +161,7 @@ class PythonScanner(Scanner):
             return self.create_object(
                 node.target.id,
                 "global",
-                source,
+                location,
                 private=self._is_private(
                     node.target.id,
                 ),
