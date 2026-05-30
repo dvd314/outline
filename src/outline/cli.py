@@ -3,6 +3,7 @@ import argparse
 from outline.commands.init import command_init
 from outline.commands.scan import command_scan
 from outline.commands.inspect import command_inspect
+from outline.commands.note import command_note
 from outline.commands.render import command_render
 
 
@@ -49,6 +50,14 @@ def main() -> None:
         help="Renderer name",
     )
 
+    note_parser = subparsers.add_parser(
+        "note",
+    )
+
+    note_parser.add_argument(
+        "path",
+    )
+
     args = parser.parse_args()
 
     match args.command:
@@ -63,6 +72,9 @@ def main() -> None:
 
         case "inspect":
             command_inspect(args)
+
+        case "note":
+            command_note(args)
 
 
 

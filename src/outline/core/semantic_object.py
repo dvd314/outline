@@ -68,15 +68,17 @@ class SemanticObject:
             ),
         )
 
-        obj.children = [
-            cls.from_dict(
+        for child_data in data.get(
+            "children",
+            [],
+        ):
+
+            child = cls.from_dict(
+                child_data,
+            )
+
+            obj.add_child(
                 child,
             )
-            for child
-            in data.get(
-                "children",
-                [],
-            )
-        ]
 
         return obj
