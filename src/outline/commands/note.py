@@ -1,64 +1,58 @@
-from pathlib import Path
+from __future__ import annotations
+
 import os
-import tempfile
+import shlex
 import subprocess
+import tempfile
+from pathlib import Path
 
-from outline.storage.graph_storage import (
-    load_graph,
-    save_graph,
-)
+from outline.core.command import Command
+from outline.storage.graph_storage import load_graph, save_graph
 
 
-def command_note(args) -> None:
-
-    graph_path = (
-        Path.cwd()
-        / ".outline"
-        / "graph.json"
-    )
-
-    graph = load_graph(
-        graph_path,
-    )
-
-    obj = graph.find_by_path(
-        args.path,
-    )
-
-    if obj is None:
-
-        print(
-            f"path not found: {args.path}"
+class NoteCommand(Command):
+    @staticmethod
+    def configure_parser(parser) -> None:
+        parser.add_argument(
+            "path",
         )
 
-        return
+    def run(self, args) -> None:
+        graph_path = Path.cwd() / ".outline" / "graph.json"
 
-    editor = (
-        os.environ.get("EDITOR")
-        or "nano"
-    )
-
-    with tempfile.NamedTemporaryFile(
-        mode="w+",
-        suffix=".md",
-    ) as tmp:
-
-        tmp.write(
-            obj.note,
+        graph = load_graph(
+            graph_path,
         )
 
-        tmp.flush()
-
-        subprocess.run(
-            [editor, tmp.name],
-            check=True,
+        obj = graph.find_by_path(
+            args.path,
         )
 
-        tmp.seek(0)
+        if obj is None:
+            print(
+                f"path not found: {args.path}"
+            )
+            return
 
-        obj.note = tmp.read()
+        editor = os.environ.get("EDITOR") or "nano"
+        editor_cmd = shlex.split(editor)
 
-    save_graph(
-        graph,
-        graph_path,
-    )
+        with tempfile.NamedTemporaryFile(
+            mode="w+",
+            suffix=".md",
+        ) as tmp:
+            tmp.write(obj.note)
+            tmp.flush()
+
+            subprocess.run(
+                editor_cmd + [tmp.name],
+                check=True,
+            )
+
+            tmp.seek(0)
+            obj.note = tmp.read()
+
+        save_graph(
+            graph,
+            graph_path,
+        )

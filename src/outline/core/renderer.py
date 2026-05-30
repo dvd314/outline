@@ -9,5 +9,12 @@ class Renderer(ABC):
     def render(
         self,
         obj: SemanticObject,
+        args
     ) -> str:
+        pass
+    
+    @staticmethod
+    def configure_parser(
+        parser,
+    ) -> None:
         pass

@@ -1,10 +1,8 @@
+from __future__ import annotations
+
 import argparse
 
-from outline.commands.init import command_init
-from outline.commands.scan import command_scan
-from outline.commands.inspect import command_inspect
-from outline.commands.note import command_note
-from outline.commands.render import command_render
+from outline.commands import COMMANDS
 
 
 def main() -> None:
@@ -18,64 +16,22 @@ def main() -> None:
         required=True,
     )
 
-    subparsers.add_parser(
-        "init",
-        help="Initialize outline project",
-    )
+    for name, info in COMMANDS.items():
+        command_cls = info["command"]
 
-    subparsers.add_parser(
-        "scan",
-        help="Build semantic graph",
-    )
+        command_parser = subparsers.add_parser(
+            name,
+            help=info["help"],
+        )
 
-    inspect_parser = subparsers.add_parser(
-        "inspect",
-        help="Return raw json from graph",
-    )
-
-    inspect_parser.add_argument(
-        "path",
-        nargs="?",
-    )
-
-    render_parser = subparsers.add_parser(
-        "render",
-        help="Render semantic graph",
-    )
-
-    render_parser.add_argument(
-        "renderer",
-        nargs="?",
-        default="tree",
-        help="Renderer name",
-    )
-
-    note_parser = subparsers.add_parser(
-        "note",
-    )
-
-    note_parser.add_argument(
-        "path",
-    )
+        command_cls.configure_parser(command_parser)
 
     args = parser.parse_args()
 
-    match args.command:
-        case "init":
-            command_init()
+    command_cls = COMMANDS[args.command]["command"]
+    command = command_cls()
 
-        case "scan":
-            command_scan()
-
-        case "render":
-            command_render(args)
-
-        case "inspect":
-            command_inspect(args)
-
-        case "note":
-            command_note(args)
-
+    command.run(args)
 
 
 if __name__ == "__main__":
