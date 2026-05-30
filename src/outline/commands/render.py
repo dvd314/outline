@@ -1,8 +1,6 @@
-from pathlib import Path
-
+import json
+import sys
 from outline.core.graph import SemanticGraph
-
-from outline.storage.graph_storage import load_graph
 
 from outline.renderers import (
     RENDERERS,
@@ -10,12 +8,6 @@ from outline.renderers import (
 
 
 def command_render(args) -> None:
-
-    graph = load_graph(
-        Path.cwd()
-        / ".outline"
-        / "graph.json"
-    )
 
     renderer_name = args.renderer
 
@@ -39,12 +31,16 @@ def command_render(args) -> None:
 
         return
 
+    data = json.load(
+        sys.stdin,
+    )
+
     renderer = (
         renderer_info["renderer"]()
     )
 
     print(
         renderer.render(
-            graph,
+            data,
         )
     )

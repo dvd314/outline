@@ -52,9 +52,7 @@ class SemanticGraph:
         self,
     ) -> dict:
 
-        return {
-            "root": self.root.to_dict(),
-        }
+        return self.root.to_dict()
 
     @classmethod
     def from_dict(
@@ -64,6 +62,6 @@ class SemanticGraph:
 
         return cls(
             SemanticObject.from_dict(
-                data["root"],
+                data,
             )
         )

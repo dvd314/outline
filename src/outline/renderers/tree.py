@@ -6,13 +6,13 @@ class TreeRenderer(Renderer):
 
     def render(
         self,
-        graph,
+        obj: dict,
     ) -> str:
 
         lines = []
 
         self._render_object(
-            graph.root,
+            obj,
             lines,
             0,
         )
@@ -23,16 +23,16 @@ class TreeRenderer(Renderer):
 
     def _render_object(
         self,
-        obj: SemanticObject,
+        obj: dict,
         lines: list[str],
         depth: int,
     ) -> None:
 
         lines.append(
-            f'{"    " * depth}{obj.name}'
+            f'{"    " * depth}{obj["name"]}'
         )
 
-        for child in obj.children:
+        for child in obj["children"]:
 
             self._render_object(
                 child,

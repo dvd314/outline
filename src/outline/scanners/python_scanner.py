@@ -139,7 +139,7 @@ class PythonScanner(Scanner):
 
             return self.create_object(
                 target.id,
-                "global",
+                "var",
                 location,
                 private=self._is_private(
                     target.id,
@@ -160,7 +160,7 @@ class PythonScanner(Scanner):
 
             return self.create_object(
                 node.target.id,
-                "global",
+                "var",
                 location,
                 private=self._is_private(
                     node.target.id,

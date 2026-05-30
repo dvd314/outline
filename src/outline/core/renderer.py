@@ -8,6 +8,6 @@ class Renderer(ABC):
     @abstractmethod
     def render(
         self,
-        graph: SemanticGraph,
+        obj: SemanticObject,
     ) -> str:
         pass
